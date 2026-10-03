@@ -51,7 +51,7 @@ input[type=range]{accent-color:var(--accent)}
 <option value="2">2×</option><option value="4" selected>4× AI</option><option value="8">8× AI</option>
 </select></div>
 <div class="field"><label for="tile">Tile xử lý</label><select id="tile">
-<option value="192">192 — máy yếu</option><option value="256" selected>256 — cân bằng</option><option value="320">320 — nhanh hơn nếu máy mạnh</option>
+<option value="192" selected>192 — máy yếu / iPhone</option><option value="256">256 — cân bằng</option><option value="320">320 — nhanh hơn nếu máy mạnh</option>
 </select></div>
 <div class="field"><label for="format">Định dạng tải xuống</label><select id="format"><option value="png">PNG</option><option value="jpg">JPG</option></select></div>
 </div>
@@ -105,13 +105,14 @@ $("reset").onclick=()=>{sourceFile=null;sourceImage=null;resultBlob=null;$("file
 function loadImage(file){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=URL.createObjectURL(file)})}
 async function getModel(){
  if(session)return session;
- setStatus("Đang tải mô hình AI lần đầu… khoảng 5 MB. Những lần sau trình duyệt có thể dùng bộ nhớ đệm.");
+ setStatus("Đang tải mô hình AI lần đầu… khoảng 5 MB. Trên iPhone app dùng WASM CPU để ổn định hơn.");
  ort.env.wasm.wasmPaths="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/";
- const providers=[];
- if(navigator.gpu)providers.push("webgpu");
- providers.push("wasm");
- try{session=await ort.InferenceSession.create(MODEL_URL,{executionProviders:providers,graphOptimizationLevel:"all"});return session}
- catch(e){session=await ort.InferenceSession.create(MODEL_URL,{executionProviders:["wasm"],graphOptimizationLevel:"all"});return session}
+ // iPhone/Safari: dùng WASM CPU ổn định. Mô hình dynamic-shape này có thể lỗi WebGPU.
+ ort.env.wasm.wasmPaths="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/";
+ ort.env.wasm.numThreads=1;
+ ort.env.wasm.proxy=false;
+ session=await ort.InferenceSession.create(MODEL_URL,{executionProviders:["wasm"],graphOptimizationLevel:"all"});
+ return session
 }
 function canvasFromImage(im,w,h){const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(im,0,0,w,h);return c}
 function rgbTensor(c,x,y,w,h){const d=c.getContext("2d",{willReadFrequently:true}).getImageData(x,y,w,h).data;const a=new Float32Array(3*w*h);let p=0;for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const i=(yy*w+xx)*4;a[p]=d[i]/255;a[p+w*h]=d[i+1]/255;a[p+2*w*h]=d[i+2]/255;p++}return new ort.Tensor("float32",a,[1,3,h,w])}
