@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="description" content="AI Làm Nét Ảnh - phóng to và phục hồi ảnh ngay trên thiết bị.">
+<link rel="manifest" href="manifest.json">
+<title>AI Làm Nét Ảnh</title>
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#111827;--muted:#64748b;--line:#e5e7eb;--accent:#2563eb;--accent2:#1d4ed8;--good:#16a34a;--danger:#dc2626}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:980px;margin:auto;padding:18px 14px 50px}.hero{background:linear-gradient(135deg,#111827,#1e3a8a);color:#fff;border-radius:22px;padding:22px 20px;margin-bottom:14px;box-shadow:0 12px 35px #0001}.hero h1{margin:0 0 6px;font-size:27px}.hero p{margin:0;color:#dbeafe}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 5px 18px #00000008}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}@media(min-width:720px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}.field{margin-bottom:12px}select,input[type=number],input[type=range]{width:100%}select,input[type=number]{border:1px solid #d1d5db;border-radius:11px;padding:11px;background:#fff;font-size:15px}
+input[type=range]{accent-color:var(--accent)}
+.btn{width:100%;border:0;border-radius:12px;padding:13px 15px;font-size:16px;font-weight:800;cursor:pointer}.primary{background:var(--accent);color:#fff}.primary:disabled{opacity:.45}.secondary{background:#eef2ff;color:#1e3a8a}.danger{background:#fee2e2;color:#991b1b}
+.drop{border:2px dashed #bfdbfe;border-radius:16px;padding:22px;text-align:center;background:#eff6ff;cursor:pointer}.drop input{display:none}.drop strong{display:block;font-size:17px}.drop span{display:block;color:var(--muted);margin-top:5px;font-size:13px}
+.preview{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:720px){.preview{grid-template-columns:1fr 1fr}}.preview figure{margin:0;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#f8fafc}.preview figcaption{padding:9px 11px;font-weight:700;font-size:13px}.preview img{display:block;width:100%;max-height:520px;object-fit:contain;background:repeating-conic-gradient(#eee 0 25%,#fff 0 50%) 0/20px 20px}
+.status{padding:11px 12px;border-radius:11px;background:#f8fafc;color:var(--muted);font-size:14px;white-space:pre-wrap}.status.good{background:#f0fdf4;color:#166534}.status.bad{background:#fef2f2;color:#991b1b}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.small{font-size:12px;color:var(--muted)}.progress{height:9px;background:#e5e7eb;border-radius:99px;overflow:hidden;margin-top:10px}.bar{height:100%;width:0;background:var(--accent);transition:width .2s}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.hidden{display:none!important}
+.info{font-size:13px;line-height:1.55;color:#475569}.pill{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;font-size:12px;font-weight:700;margin:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<section class="hero">
+<h1>✨ AI Làm Nét Ảnh</h1>
+<p>Phóng to • phục hồi chi tiết • chuẩn bị ảnh cho bảng hiệu, banner và in khổ lớn.</p>
+</section>
+
+<section class="card">
+<label class="drop" for="file">
+<strong>📷 Chọn ảnh cần làm nét</strong>
+<span>Ảnh được xử lý trên thiết bị; không cần tải ảnh lên máy chủ của ứng dụng.</span>
+<input id="file" type="file" accept="image/*">
+</label>
+<div id="fileInfo" class="small" style="margin-top:10px"></div>
+</section>
+
+<section class="card">
+<div class="grid">
+<div class="field"><label for="mode">Chế độ</label><select id="mode">
+<option value="sign">Bảng hiệu — rõ chữ, nét vừa</option>
+<option value="photo">Ảnh thường — tự nhiên</option>
+<option value="soft">Ít xử lý — giữ nguyên chất ảnh</option>
+</select></div>
+<div class="field"><label for="scale">Kích thước đầu ra</label><select id="scale">
+<option value="2">2×</option><option value="4" selected>4× AI</option><option value="8">8× AI</option>
+</select></div>
+<div class="field"><label for="tile">Tile xử lý</label><select id="tile">
+<option value="192">192 — máy yếu</option><option value="256" selected>256 — cân bằng</option><option value="320">320 — nhanh hơn nếu máy mạnh</option>
+</select></div>
+<div class="field"><label for="format">Định dạng tải xuống</label><select id="format"><option value="png">PNG</option><option value="jpg">JPG</option></select></div>
+</div>
+<div class="grid">
+<div class="field"><label for="widthCm">Khổ in ngang (cm)</label><input id="widthCm" type="number" min="0" step="0.1" placeholder="Ví dụ 490"></div>
+<div class="field"><label for="heightCm">Khổ in cao (cm)</label><input id="heightCm" type="number" min="0" step="0.1" placeholder="Ví dụ 150"></div>
+<div class="field"><label for="dpi">DPI</label><select id="dpi"><option>100</option><option selected>150</option><option>200</option><option>300</option></select></div>
+<div class="field"><label for="sharp">Độ nét sau AI</label><input id="sharp" type="range" min="0" max="100" value="35"><div class="small"><span id="sharpVal">35</span>%</div></div>
+</div>
+<div class="info">
+<span class="pill">4× AI</span><span class="pill">Tile chống tràn bộ nhớ</span><span class="pill">PNG/JPG</span><span class="pill">Tính pixel theo DPI</span>
+</div>
+</section>
+
+<section class="card">
+<div class="actions">
+<button id="run" class="btn primary" disabled>✨ Làm nét bằng AI</button>
+<button id="reset" class="btn secondary">↺ Xóa & làm lại</button>
+</div>
+<div id="progress" class="progress hidden"><div id="bar" class="bar"></div></div>
+<div id="status" class="status" style="margin-top:10px">Chưa chọn ảnh.</div>
+</section>
+
+<section id="previewCard" class="card hidden">
+<div class="preview">
+<figure><figcaption>Ảnh gốc</figcaption><img id="before"></figure>
+<figure><figcaption>Ảnh sau AI</figcaption><img id="after"></figure>
+</div>
+<div id="resultInfo" class="info" style="margin-top:12px"></div>
+<a id="download" class="btn primary hidden" style="display:block;text-align:center;text-decoration:none;margin-top:12px">⬇️ Tải ảnh kết quả</a>
+</section>
+
+<section class="card">
+<div class="info"><b>Lưu ý:</b> Real-ESRGAN phục hồi chi tiết bằng mô hình AI nên không thể khôi phục chính xác những chi tiết đã mất hoàn toàn. Ảnh quá lớn nên xử lý theo tile để giảm nguy cơ hết RAM. Lần đầu cần tải mô hình khoảng 5 MB; trình duyệt có thể lưu mô hình để dùng lại.</div>
+</section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort.min.js"></script>
+<script>
+const MODEL_URL="https://huggingface.co/Heliosoph/realesrgan-onnx/resolve/main/realesr-general-x4v3.onnx";
+const MODEL_KEY="realesr-general-x4v3-v1";
+const $=id=>document.getElementById(id);
+let sourceFile=null, sourceImage=null, resultBlob=null, session=null;
+
+function setStatus(msg,type=""){ $("status").textContent=msg; $("status").className="status "+type; }
+function setProgress(v){$("bar").style.width=Math.max(0,Math.min(100,v))+"%";$("progress").classList.toggle("hidden",v<=0||v>=100)}
+$("sharp").addEventListener("input",()=>$("sharpVal").textContent=$("sharp").value);
+$("file").addEventListener("change",async e=>{const f=e.target.files[0];if(!f)return;sourceFile=f;sourceImage=await loadImage(f);$("before").src=URL.createObjectURL(f);$("previewCard").classList.remove("hidden");$("run").disabled=false;$("fileInfo").textContent=`${f.name} • ${sourceImage.naturalWidth}×${sourceImage.naturalHeight}px • ${(f.size/1024/1024).toFixed(2)} MB`;setStatus("Đã chọn ảnh. Bấm “Làm nét bằng AI”.")});
+$("reset").onclick=()=>{sourceFile=null;sourceImage=null;resultBlob=null;$("file").value="";$("before").removeAttribute("src");$("after").removeAttribute("src");$("previewCard").classList.add("hidden");$("download").classList.add("hidden");$("run").disabled=true;$("fileInfo").textContent="";setProgress(0);setStatus("Chưa chọn ảnh.")};
+
+function loadImage(file){return new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=URL.createObjectURL(file)})}
+async function getModel(){
+ if(session)return session;
+ setStatus("Đang tải mô hình AI lần đầu… khoảng 5 MB. Những lần sau trình duyệt có thể dùng bộ nhớ đệm.");
+ ort.env.wasm.wasmPaths="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/";
+ const providers=[];
+ if(navigator.gpu)providers.push("webgpu");
+ providers.push("wasm");
+ try{session=await ort.InferenceSession.create(MODEL_URL,{executionProviders:providers,graphOptimizationLevel:"all"});return session}
+ catch(e){session=await ort.InferenceSession.create(MODEL_URL,{executionProviders:["wasm"],graphOptimizationLevel:"all"});return session}
+}
+function canvasFromImage(im,w,h){const c=document.createElement("canvas");c.width=w;c.height=h;const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(im,0,0,w,h);return c}
+function rgbTensor(c,x,y,w,h){const d=c.getContext("2d",{willReadFrequently:true}).getImageData(x,y,w,h).data;const a=new Float32Array(3*w*h);let p=0;for(let yy=0;yy<h;yy++)for(let xx=0;xx<w;xx++){const i=(yy*w+xx)*4;a[p]=d[i]/255;a[p+w*h]=d[i+1]/255;a[p+2*w*h]=d[i+2]/255;p++}return new ort.Tensor("float32",a,[1,3,h,w])}
+function putTensor(ctx,out,x,y,w,h){const a=out.data;const plane=w*h;const img=ctx.createImageData(w,h);for(let i=0;i<plane;i++){img.data[i*4]=Math.max(0,Math.min(255,Math.round(a[i]*255)));img.data[i*4+1]=Math.max(0,Math.min(255,Math.round(a[i+plane]*255)));img.data[i*4+2]=Math.max(0,Math.min(255,Math.round(a[i+2*plane]*255)));img.data[i*4+3]=255}ctx.putImageData(img,x,y)}
+async function upscale4(im,tile,mode){
+ const maxSide=4096;
+ const factor=Math.min(1,maxSide/Math.max(im.naturalWidth,im.naturalHeight));
+ const sw=Math.max(1,Math.round(im.naturalWidth*factor)),sh=Math.max(1,Math.round(im.naturalHeight*factor));
+ const src=canvasFromImage(im,sw,sh), dst=document.createElement("canvas");dst.width=sw*4;dst.height=sh*4;
+ const ctx=dst.getContext("2d",{willReadFrequently:true});const s=await getModel();const overlap=12;let n=0;
+ const xs=[];for(let x=0;x<sw;x+=tile)xs.push(x);const ys=[];for(let y=0;y<sh;y+=tile)ys.push(y);const total=xs.length*ys.length;
+ for(const y of ys)for(const x of xs){
+   const w=Math.min(tile,sw-x),h=Math.min(tile,sh-y);
+   const ox=x>0?overlap:0,oy=y>0?overlap:0,rx=Math.max(0,x-ox),ry=Math.max(0,y-oy),rw=Math.min(tile+ox,sw-rx),rh=Math.min(tile+oy,sh-ry);
+   const tensor=rgbTensor(src,rx,ry,rw,rh);const feeds={};feeds[s.inputNames[0]]=tensor;
+   const out=(await s.run(feeds))[s.outputNames[0]];
+   const ow=rw*4,oh=rh*4;
+   const tmp=document.createElement("canvas");tmp.width=ow;tmp.height=oh;putTensor(tmp.getContext("2d"),out,0,0,ow,oh);
+   const sx=ox*4,sy=oy*4,sw2=Math.max(1,(w)*4),sh2=Math.max(1,(h)*4);
+   ctx.drawImage(tmp,sx,sy,sw2,sh2,x*4,y*4,w*4,h*4);
+   n++;setProgress(10+n/total*75);await new Promise(r=>setTimeout(r,0));
+ }
+ if(factor<1){const final=document.createElement("canvas");final.width=im.naturalWidth*4;final.height=im.naturalHeight*4;final.getContext("2d").drawImage(dst,0,0,final.width,final.height);return final}
+ return dst;
+}
+function sharpenCanvas(c,amount){if(amount<=0)return c;const out=document.createElement("canvas");out.width=c.width;out.height=c.height;const o=out.getContext("2d");o.filter="none";o.drawImage(c,0,0);const blur=document.createElement("canvas");blur.width=c.width;blur.height=c.height;const b=blur.getContext("2d");b.filter="blur(0.55px)";b.drawImage(c,0,0);o.globalAlpha=amount/100*0.42;o.globalCompositeOperation="difference";o.drawImage(blur,0,0);o.globalCompositeOperation="source-over";o.globalAlpha=1;return out}
+function resizeCanvas(c,w,h){const out=document.createElement("canvas");out.width=w;out.height=h;out.getContext("2d").drawImage(c,0,0,w,h);return out}
+function pixelsForPrint(wcm,hcm,dpi){return {w:Math.round(wcm/2.54*dpi),h:Math.round(hcm/2.54*dpi)}}
+async function process(){
+ if(!sourceImage)return;
+ $("run").disabled=true;setProgress(1);setStatus("Đang chuẩn bị AI…");
+ try{
+  const scale=Number($("scale").value),tile=Number($("tile").value),mode=$("mode").value;
+  let c=await upscale4(sourceImage,tile,mode);
+  if(scale===2)c=resizeCanvas(c,Math.round(c.width/2),Math.round(c.height/2));
+  if(scale===8){setStatus("Đang chạy lượt AI thứ 2 để đạt 8×…");const im=await canvasToImage(c);c=await upscale4(im,tile,mode);if(c.width>sourceImage.naturalWidth*8||c.height>sourceImage.naturalHeight*8)c=resizeCanvas(c,sourceImage.naturalWidth*8,sourceImage.naturalHeight*8)}
+  let sharp=Number($("sharp").value);if(mode==="soft")sharp=Math.min(sharp,15);if(mode==="photo")sharp=Math.min(sharp,30);c=sharpenCanvas(c,sharp);
+  const wcm=Number($("widthCm").value),hcm=Number($("heightCm").value),dpi=Number($("dpi").value);
+  let printNote="";if(wcm>0&&hcm>0){const p=pixelsForPrint(wcm,hcm,dpi);printNote=`Khổ in ${wcm}×${hcm} cm @ ${dpi} DPI ≈ ${p.w}×${p.h}px. Ảnh AI hiện tại: ${c.width}×${c.height}px.`}
+  const type=$("format").value==="jpg"?"image/jpeg":"image/png";resultBlob=await new Promise(r=>c.toBlob(r,type,$("format").value==="jpg"?0.94:undefined));
+  $("after").src=URL.createObjectURL(resultBlob);$("download").href=URL.createObjectURL(resultBlob);$("download").download="ai-lam-net-anh-"+Date.now()+"."+$("format").value;$("download").classList.remove("hidden");setProgress(100);setStatus("Hoàn tất. Ảnh đã được xử lý ngay trên thiết bị.","good");$("resultInfo").textContent=`${c.width}×${c.height}px • ${(resultBlob.size/1024/1024).toFixed(2)} MB. ${printNote}`;
+ }catch(e){console.error(e);setProgress(0);setStatus("Không thể xử lý ảnh. Nếu máy đang thiếu RAM, hãy thử Tile 192 hoặc ảnh nhỏ hơn. Chi tiết: "+(e.message||e),"bad")}
+ finally{$("run").disabled=false}
+}
+function canvasToImage(c){return new Promise(res=>{c.toBlob(b=>{const im=new Image();im.onload=()=>res(im);im.src=URL.createObjectURL(b)},"image/png")})}
+$("run").onclick=process;
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+</script>
+</body></html>
