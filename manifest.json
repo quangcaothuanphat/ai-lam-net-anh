@@ -1,0 +1,10 @@
+{
+  "name":"AI Làm Nét Ảnh",
+  "short_name":"Làm Nét Ảnh",
+  "start_url":"./",
+  "display":"standalone",
+  "background_color":"#f4f6f8",
+  "theme_color":"#111827",
+  "lang":"vi",
+  "description":"Phóng to và phục hồi ảnh bằng AI ngay trên thiết bị."
+}
