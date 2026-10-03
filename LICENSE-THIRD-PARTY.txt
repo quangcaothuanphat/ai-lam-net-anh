@@ -1,0 +1,12 @@
+Third-party notice
+
+Real-ESRGAN model:
+realesr-general-x4v3.onnx
+Source: https://huggingface.co/Heliosoph/realesrgan-onnx
+License: BSD-3-Clause
+
+ONNX Runtime Web:
+https://onnxruntime.ai/
+License: MIT
+
+The application code in this repository is provided by the repository owner unless otherwise stated.
