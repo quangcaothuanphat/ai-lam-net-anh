@@ -170,6 +170,29 @@ function loadImage(file){
   });
 }
 
+async function prepareImageForPhone(file){
+  const im=await loadImage(file);
+  const pixels=im.naturalWidth*im.naturalHeight;
+  const maxLong=6000;
+  const maxPixels=24e6;
+  const needsOptimize=file.size>30*1024*1024 || pixels>maxPixels || Math.max(im.naturalWidth,im.naturalHeight)>maxLong;
+  if(!needsOptimize)return {file,image:im,optimized:false};
+
+  const scale=Math.min(1,maxLong/Math.max(im.naturalWidth,im.naturalHeight),Math.sqrt(maxPixels/pixels));
+  const w=Math.max(1,Math.round(im.naturalWidth*scale));
+  const h=Math.max(1,Math.round(im.naturalHeight*scale));
+  const c=document.createElement("canvas");c.width=w;c.height=h;
+  const ctx=c.getContext("2d",{willReadFrequently:true});
+  ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+  ctx.drawImage(im,0,0,w,h);
+  const blob=await new Promise((resolve,reject)=>{
+    c.toBlob(b=>b?resolve(b):reject(new Error("Không thể tối ưu ảnh lớn")),"image/jpeg",.9);
+  });
+  const optimizedFile=new File([blob],file.name.replace(/\.[^.]+$/,"")+"_optimized.jpg",{type:"image/jpeg",lastModified:Date.now()});
+  const optimizedImage=await loadImage(optimizedFile);
+  return {file:optimizedFile,image:optimizedImage,optimized:true};
+}
+
 async function getModel(){
   if(session)return session;
   setStatus("Đang tải mô hình AI lần đầu… Sau lần đầu trình duyệt thường có thể dùng lại model.");
