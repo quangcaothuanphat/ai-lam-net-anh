@@ -73,7 +73,7 @@ input[type=range]{accent-color:var(--accent)}
 <button id="reset" class="btn secondary">↺ Xóa & làm lại</button>
 </div>
 <div id="progress" class="progress hidden"><div id="bar" class="bar"></div></div>
-<div id="status" class="status" style="margin-top:10px">Chưa chọn ảnh.</div>
+<div id="status" class="status hidden" style="margin-top:10px">Chưa chọn ảnh.</div>
 </section>
 
 <section id="previewCard" class="card hidden">
@@ -108,7 +108,7 @@ $("sharp").addEventListener("input",()=> $("sharpVal").textContent=$("sharp").va
 $("file").addEventListener("change",async e=>{
   const f=e.target.files[0]; if(!f)return;
   if(!f.type.startsWith("image/")){setStatus("Vui lòng chọn file ảnh.","bad");return}
-  if(f.size>30*1024*1024){$("printAdvice").textContent="Ảnh trên 30 MB có thể gây thiếu RAM trên iPhone. Hãy chọn ảnh nhỏ hơn hoặc nén ảnh trước."; $("printAdvice").className="status bad"; $("printAdvice").classList.remove("hidden"); setStatus("Ảnh quá lớn để xử lý an toàn trên iPhone.","bad"); return}
+  if(f.size>30*1024*1024){$("printAdvice").textContent="Ảnh trên 30 MB có thể gây thiếu RAM trên iPhone. Hãy chọn ảnh nhỏ hơn hoặc nén ảnh trước."; $("printAdvice").className="status bad"; $("printAdvice").classList.remove("hidden"); $("status").textContent=""; $("status").className="status hidden"; $("run").disabled=true; return}
   sourceFile=f;
   sourceImage=await loadImage(f);
   $("before").src=URL.createObjectURL(f);
@@ -124,7 +124,7 @@ $("reset").onclick=()=>{
   $("file").value="";$("before").removeAttribute("src");$("after").removeAttribute("src");
   $("previewCard").classList.add("hidden");$("download").classList.add("hidden");
   $("run").disabled=true;$("fileInfo").textContent="";$("printAdvice").classList.add("hidden");
-  setProgress(0);setStatus("Chưa chọn ảnh.");
+  setProgress(0);$("status").textContent="";$("status").className="status hidden";
 };
 
 function loadImage(file){
