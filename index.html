@@ -362,7 +362,7 @@ async function process(){
 }
 $("run").onclick=process;
 if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js?v=20261005.6",{updateViaCache:"none"})
+  navigator.serviceWorker.register("sw.js?v=20261005.7",{updateViaCache:"none"})
     .then(reg=>reg.update())
     .catch(()=>{});
 }
