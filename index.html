@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
+<meta name="app-version" content="2026.10.05.3">
 <meta name="description" content="AI Làm Nét Ảnh • Bảng hiệu - phóng to và phục hồi ảnh ngay trên thiết bị.">
 <link rel="manifest" href="manifest.json">
 <title>AI Làm Nét Ảnh</title>
@@ -301,6 +302,6 @@ async function process(){
   }finally{setBusy(false)}
 }
 $("run").onclick=process;
-if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").then(reg=>reg.update()).catch(()=>{});
 </script>
 </body></html>
