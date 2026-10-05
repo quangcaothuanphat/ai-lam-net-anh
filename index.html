@@ -107,14 +107,14 @@ $("sharp").addEventListener("input",()=> $("sharpVal").textContent=$("sharp").va
 $("file").addEventListener("change",async e=>{
   const f=e.target.files[0]; if(!f)return;
   if(!f.type.startsWith("image/")){setStatus("Vui lòng chọn file ảnh.","bad");return}
-  if(f.size>30*1024*1024){setStatus("Ảnh trên 30 MB có thể gây thiếu RAM trên iPhone. Hãy chọn ảnh nhỏ hơn hoặc nén ảnh trước.","bad");return}
+  if(f.size>30*1024*1024){$("printAdvice").textContent="Ảnh trên 30 MB có thể gây thiếu RAM trên iPhone. Hãy chọn ảnh nhỏ hơn hoặc nén ảnh trước."; $("printAdvice").className="status bad"; $("printAdvice").classList.remove("hidden"); setStatus("Ảnh quá lớn để xử lý an toàn trên iPhone.","bad"); return}
   sourceFile=f;
   sourceImage=await loadImage(f);
   $("before").src=URL.createObjectURL(f);
   $("previewCard").classList.remove("hidden");
   $("run").disabled=false;
   $("fileInfo").textContent=`${f.name} • ${sourceImage.naturalWidth}×${sourceImage.naturalHeight}px • ${(f.size/1024/1024).toFixed(2)} MB`;
-  $("printAdvice").classList.add("hidden");
+  $("printAdvice").textContent=""; $("printAdvice").className="status hidden";
   setStatus("Đã chọn ảnh. Với bảng hiệu, nên nhập đúng khổ in và DPI rồi bấm “Làm nét bằng AI”.");
 });
 
