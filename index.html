@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="2026.10.05.5">
+<meta name="app-version" content="2026.10.05.6">
 <meta name="description" content="AI Làm Nét Ảnh • Bảng hiệu - phóng to và phục hồi ảnh ngay trên thiết bị.">
 <link rel="manifest" href="manifest.json">
 <title>AI Làm Nét Ảnh</title>
@@ -125,9 +125,10 @@ $("file").addEventListener("change",async e=>{
 
   if(f.size>30*1024*1024){
     sourceFile=null; sourceImage=null; $("previewCard").classList.add("hidden");
-    $("fileInfo").textContent=""; $("fileInfo").classList.add("hidden");
+    $("fileInfo").innerHTML=`<b>⚠️ Ảnh quá lớn</b>${f.name} • ${(f.size/1024/1024).toFixed(2)} MB`;
+    $("fileInfo").classList.remove("hidden");
     $("run").disabled=true;
-    setStatus("Ảnh trên 30 MB có thể gây thiếu RAM trên iPhone. Hãy chọn ảnh nhỏ hơn hoặc nén ảnh trước.","bad");
+    setStatus("Ảnh này vượt giới hạn 30 MB để bảo vệ RAM trên iPhone. Hãy chọn ảnh nhỏ hơn 30 MB hoặc nén ảnh trước khi làm nét.","bad");
     return;
   }
 
@@ -339,7 +340,7 @@ async function process(){
 }
 $("run").onclick=process;
 if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js?v=20261005.5",{updateViaCache:"none"})
+  navigator.serviceWorker.register("sw.js?v=20261005.6",{updateViaCache:"none"})
     .then(reg=>reg.update())
     .catch(()=>{});
 }
