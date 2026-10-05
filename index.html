@@ -123,27 +123,26 @@ $("file").addEventListener("change",async e=>{
     $("run").disabled=true; setStatus("Vui lòng chọn file ảnh.","bad"); return;
   }
 
-  if(f.size>30*1024*1024){
-    sourceFile=null; sourceImage=null; $("previewCard").classList.add("hidden");
-    $("fileInfo").innerHTML=`<b>⚠️ Ảnh quá lớn</b>${f.name} • ${(f.size/1024/1024).toFixed(2)} MB`;
-    $("fileInfo").classList.remove("hidden");
-    $("run").disabled=true;
-    setStatus("Ảnh này vượt giới hạn 30 MB để bảo vệ RAM trên iPhone. Hãy chọn ảnh nhỏ hơn 30 MB hoặc nén ảnh trước khi làm nét.","bad");
-    return;
-  }
-
   try{
-    sourceFile=f;
-    sourceImage=await loadImage(f);
-    beforeUrl=URL.createObjectURL(f);
+    const originalMB=f.size/1024/1024;
+    setStatus("Đang kiểm tra kích thước ảnh và tối ưu bộ nhớ trên iPhone…");
+    const prepared=await prepareImageForPhone(f);
+    sourceFile=prepared.file;
+    sourceImage=prepared.image;
+    beforeUrl=URL.createObjectURL(prepared.file);
     $("before").src=beforeUrl;
     $("previewCard").classList.remove("hidden");
     $("run").disabled=false;
 
-    $("fileInfo").innerHTML=`<b>✓ Đã chọn ảnh</b>${f.name} • ${sourceImage.naturalWidth}×${sourceImage.naturalHeight}px • ${(f.size/1024/1024).toFixed(2)} MB`;
+    if(prepared.optimized){
+      $("fileInfo").innerHTML=`<b>✓ Đã tự tối ưu ảnh lớn</b>${f.name} • ${originalMB.toFixed(2)} MB → ${(prepared.file.size/1024/1024).toFixed(2)} MB • ${sourceImage.naturalWidth}×${sourceImage.naturalHeight}px`;
+      setStatus("Ảnh hơi lớn nên app đã tự giảm kích thước an toàn trước khi AI xử lý.");
+    }else{
+      $("fileInfo").innerHTML=`<b>✓ Đã chọn ảnh</b>${f.name} • ${sourceImage.naturalWidth}×${sourceImage.naturalHeight}px • ${(f.size/1024/1024).toFixed(2)} MB`;
+      setStatus("Đã chọn ảnh. Với bảng hiệu, nên nhập đúng khổ in và DPI rồi bấm “Làm nét bằng AI”.");
+    }
     $("fileInfo").classList.remove("hidden");
     $("printAdvice").textContent=""; $("printAdvice").className="status hidden";
-    setStatus("Đã chọn ảnh. Với bảng hiệu, nên nhập đúng khổ in và DPI rồi bấm “Làm nét bằng AI”.");
   }catch(err){
     sourceFile=null; sourceImage=null; $("previewCard").classList.add("hidden");
     $("fileInfo").textContent=""; $("fileInfo").classList.add("hidden");
