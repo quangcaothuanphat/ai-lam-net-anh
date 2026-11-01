@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#111827">
-<meta name="app-version" content="2026.10.05.7">
+<meta name="app-version" content="2026.11.01.1">
 <meta name="description" content="AI Làm Nét Ảnh • Bảng hiệu - phóng to và phục hồi ảnh ngay trên thiết bị.">
 <link rel="manifest" href="manifest.json">
 <title>AI Làm Nét Ảnh</title>
@@ -63,7 +63,7 @@ input[type=range]{accent-color:var(--accent)}
 <div class="field"><label for="sharp">Độ nét sau AI</label><input id="sharp" type="range" min="0" max="100" value="35"><div class="small"><span id="sharpVal">35</span>%</div></div>
 </div>
 <div class="info">
-<span class="pill">AI Real-ESRGAN</span><span class="pill">Tile chống tràn bộ nhớ</span><span class="pill">PNG/JPG</span><span class="pill">Tính pixel theo DPI</span><span class="pill">Tối ưu in bảng hiệu</span>
+<span class="pill">AI Real-ESRGAN</span><span class="pill">Tile chống tràn bộ nhớ</span><span class="pill">PNG/JPG</span><span class="pill">Tính pixel theo DPI</span><span class="pill">Tối ưu in bảng hiệu</span><span class="pill">Giữ độ sáng ảnh gốc</span>
 </div>
 </section>
 
@@ -278,13 +278,57 @@ function resizeCanvas(c,w,h){
 
 function sharpenCanvas(c,amount,mode){
   if(amount<=0)return c;
+  // Unsharp mask: sharpen edges without using the Difference blend mode,
+  // which can shift overall brightness and make the result look darker.
   const out=document.createElement("canvas");out.width=c.width;out.height=c.height;
-  const o=out.getContext("2d");o.drawImage(c,0,0);
+  const o=out.getContext("2d",{willReadFrequently:true});
   const blur=document.createElement("canvas");blur.width=c.width;blur.height=c.height;
-  const b=blur.getContext("2d");b.filter=mode==="sign"?"blur(.7px)":"blur(.55px)";b.drawImage(c,0,0);
-  o.globalAlpha=(amount/100)*(mode==="sign"?.52:.35);
-  o.globalCompositeOperation="difference";o.drawImage(blur,0,0);
-  o.globalCompositeOperation="source-over";o.globalAlpha=1;return out;
+  const b=blur.getContext("2d",{willReadFrequently:true});
+  b.filter=mode==="sign"?"blur(.8px)":"blur(.65px)";b.drawImage(c,0,0);
+  const base=o.createImageData(c.width,c.height);
+  const srcCtx=c.getContext("2d",{willReadFrequently:true});
+  const src=srcCtx.getImageData(0,0,c.width,c.height);
+  const soft=b.getImageData(0,0,c.width,c.height);
+  const strength=Math.min(.65,(amount/100)*(mode==="sign"?.55:.38));
+  for(let i=0;i<src.data.length;i+=4){
+    for(let k=0;k<3;k++){
+      base.data[i+k]=Math.max(0,Math.min(255,Math.round(src.data[i+k]+(src.data[i+k]-soft.data[i+k])*strength)));
+    }
+    base.data[i+3]=src.data[i+3];
+  }
+  o.putImageData(base,0,0);return out;
+}
+
+// Match the AI result's average luminance to a resized copy of the original.
+// This corrects global darkening/brightening while retaining the AI detail and color.
+function matchBrightnessToOriginal(result,original){
+  const sampleW=256,sampleH=Math.max(1,Math.round(256*result.height/result.width));
+  const sampleResult=document.createElement("canvas");sampleResult.width=sampleW;sampleResult.height=sampleH;
+  const sampleOriginal=document.createElement("canvas");sampleOriginal.width=sampleW;sampleOriginal.height=sampleH;
+  const rc=sampleResult.getContext("2d",{willReadFrequently:true});
+  const oc=sampleOriginal.getContext("2d",{willReadFrequently:true});
+  rc.drawImage(result,0,0,sampleW,sampleH);
+  oc.drawImage(original,0,0,sampleW,sampleH);
+  const rd=rc.getImageData(0,0,sampleW,sampleH).data;
+  const od=oc.getImageData(0,0,sampleW,sampleH).data;
+  let resultY=0,originalY=0,count=sampleW*sampleH;
+  for(let i=0;i<rd.length;i+=4){
+    resultY+=.2126*rd[i]+.7152*rd[i+1]+.0722*rd[i+2];
+    originalY+=.2126*od[i]+.7152*od[i+1]+.0722*od[i+2];
+  }
+  resultY/=count;originalY/=count;
+  if(resultY<1||originalY<1)return result;
+  const factor=Math.max(.75,Math.min(1.35,originalY/resultY));
+  if(Math.abs(factor-1)<.005)return result;
+  const ctx=result.getContext("2d",{willReadFrequently:true});
+  const image=ctx.getImageData(0,0,result.width,result.height);
+  for(let i=0;i<image.data.length;i+=4){
+    image.data[i]=Math.min(255,Math.round(image.data[i]*factor));
+    image.data[i+1]=Math.min(255,Math.round(image.data[i+1]*factor));
+    image.data[i+2]=Math.min(255,Math.round(image.data[i+2]*factor));
+  }
+  ctx.putImageData(image,0,0);
+  return result;
 }
 
 function pixelsForPrint(wcm,hcm,dpi){
@@ -324,6 +368,8 @@ async function process(){
     if(mode==="soft")sharp=Math.min(sharp,15);
     if(mode==="photo")sharp=Math.min(sharp,30);
     lastCanvas=sharpenCanvas(lastCanvas,sharp,mode);
+    // Keep output brightness consistent with the original image.
+    lastCanvas=matchBrightnessToOriginal(lastCanvas,sourceImage);
 
     const wcm=Number($("widthCm").value),hcm=Number($("heightCm").value),dpi=Number($("dpi").value);
     let printNote="";
@@ -362,7 +408,7 @@ async function process(){
 }
 $("run").onclick=process;
 if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js?v=20261005.7",{updateViaCache:"none"})
+  navigator.serviceWorker.register("sw.js?v=20261101.1",{updateViaCache:"none"})
     .then(reg=>reg.update())
     .catch(()=>{});
 }
