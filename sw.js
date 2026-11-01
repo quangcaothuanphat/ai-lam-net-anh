@@ -1,4 +1,4 @@
-const CACHE="ai-lam-net-anh-v4";
+const CACHE="ai-lam-net-anh-v5";
 const STATIC_ASSETS=["./manifest.json","./icon.svg"];
 
 self.addEventListener("install",event=>{
