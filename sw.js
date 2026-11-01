@@ -1,4 +1,4 @@
-const CACHE="ai-lam-net-anh-v5";
+const CACHE="ai-lam-net-anh-v6";
 const STATIC_ASSETS=["./manifest.json","./icon.svg"];
 
 self.addEventListener("install",event=>{
@@ -34,6 +34,9 @@ async function networkFirst(request){
 self.addEventListener("fetch",event=>{
   if(event.request.method!=="GET")return;
   const url=new URL(event.request.url);
+  // Keep cross-origin model, WASM and CDN requests out of the service worker.
+  // Let Safari fetch these resources directly to avoid failed respondWith() requests.
+  if(url.origin!==self.location.origin)return;
   const isAppPage=event.request.mode==="navigate" || url.pathname.endsWith("/index.html") || url.pathname.endsWith("/");
   if(isAppPage){
     event.respondWith(networkFirst(event.request));
